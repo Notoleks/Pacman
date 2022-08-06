@@ -2,7 +2,7 @@ from turtle import width
 import pygame
 import time
 from sys import exit
-
+import random
 
 pygame.init()
 width,height = 600,600
@@ -22,10 +22,46 @@ clock = pygame.time.Clock()
 # pacman.set_colorkey((255,255,255))
 
 # pacman_Rect = pacman.get_rect()
-redghost = pygame.image.load("redghost.png")
-redghost.set_colorkey((255,255,255))
-redghost = pygame.transform.scale(redghost,(30,30))
-redghost_Rect = redghost.get_rect()
+
+class redghost(pygame.sprite.Sprite):
+    def __init__(self, board, image, *groups):
+        super().__init__(groups)
+        self.image = pygame.image.load(image)
+        self.image.set_colorkey((255,255,255))
+        self.image = pygame.transform.scale(self.image,(30,30))
+        self.rect = self.image.get_rect(center=(300,330))
+        self.direction = 0
+        self.board = board
+    def update(self):
+        if self.direction == 0:
+            self.rect.x += 2
+        elif self.direction == 90:
+            self.rect.y -= 2
+        elif self.direction == 180:
+            self.rect.x -= 2
+        elif self.direction == 270:
+            self.rect.y += 2
+
+        if pygame.sprite.collide_mask(self, self.board):
+
+            if self.direction == 0:
+                self.rect.x -= 2
+            elif self.direction == 90:
+                self.rect.y += 2
+            elif self.direction == 180:
+                self.rect.x += 2
+            elif self.direction == 270:
+                self.rect.y -= 2
+            choice = random.randint(0,3)
+            if choice == 0:
+                self.direction = 0
+            elif choice == 1:
+                self.direction = 90
+            elif choice == 2:
+                self.direction = 180
+            elif choice == 3:
+                self.direction = 270
+
 
 class board(pygame.sprite.Sprite):
     def __init__(self, width, height, screen) -> None:
@@ -113,10 +149,11 @@ class pacman(pygame.sprite.Sprite):
 
 
 
-
+characters = pygame.sprite.Group()
 board1 = board(width,height,screen)
 pacman1 = pacman(screen, board1)
-
+redghost1 = redghost(board1, "orangeghost.png", characters)
+redghost2 = redghost(board1, "redghost.png", characters)
 
 while True:
     
@@ -129,9 +166,11 @@ while True:
         #game code
     screen.fill((0,0,0))
     board1.draw()
-    screen.blit(redghost, redghost_Rect)
+    
     pacman1.move()
     pacman1.draw()
+    characters.draw(screen)
+    characters.update()
     pygame.display.update()
     
     clock.tick(60)
