@@ -29,9 +29,10 @@ class redghost(pygame.sprite.Sprite):
         self.image = pygame.image.load(image)
         self.image.set_colorkey((255,255,255))
         self.image = pygame.transform.scale(self.image,(30,30))
-        self.rect = self.image.get_rect(center=(300,330))
+        self.rect = self.image.get_rect(center=(300,270))
         self.direction = 0
         self.board = board
+        self.name = 'ghost'
     def update(self):
         if self.direction == 0:
             self.rect.x += 2
@@ -73,39 +74,41 @@ class board(pygame.sprite.Sprite):
         self.rect = self.board.get_rect()
         self.mask = pygame.mask.from_surface(self.board)
         self.screen = screen
+        self.name = 'board'
 
 
     def draw(self):
         self.screen.blit(self.board, self.rect)
 
+class pellets(pygame.sprite.Sprite):
+    def __init__(self, screen, *groups) -> None:
+        super().__init__(*groups)
+        self.image = pygame.image.load("pellet.png")
 
         
 
 class pacman(pygame.sprite.Sprite):
-    def __init__(self, screen, board) -> None:
+    def __init__(self, screen, board, *groups) -> None:
 
-        super().__init__()
-        self.pacman = pygame.image.load("pacman.png").convert()
-        self.pacman.set_colorkey((255,255,0))
-        pygame.Surface.set_colorkey(self.pacman,(255,255,255))
-        self.pacman = pygame.transform.scale(self.pacman, (50 , 28))
-        self.rect = self.pacman.get_rect()
+        super().__init__(*groups)
+        self.image = pygame.image.load("pacman.png").convert()
+        self.image.set_colorkey((255,255,0))
+        pygame.Surface.set_colorkey(self.image,(255,255,255))
+        self.image = pygame.transform.scale(self.image, (50 , 28))
+        self.rect = self.image.get_rect()
         self.rect.center = (340,330)
-        self.mask = pygame.mask.from_surface(self.pacman)
+        self.mask = pygame.mask.from_surface(self.image)
         self.direction = 0
         self.screen = screen
         self.board = board
+        self.name = 'pacman'
+
 
         
     
 
 
-    def draw(self):
-        self.screen.blit(self.pacman, self.rect)
-
-
-
-    def move(self):
+    def update(self):
         # offset_x = self.pacman_Rect[0] - self.board_Rect[0]
         # offset_y = self.pacman_Rect[1] - self.board_Rect[1]
         # overlap = self.mask.overlap(self.board_mask,(offset_x, offset_y))
@@ -130,8 +133,16 @@ class pacman(pygame.sprite.Sprite):
                 self.rect.x += 2
             elif self.direction == 270:
                 self.rect.y -= 2
-        
 
+        chars = self.groups()[0].sprites()
+        for char in chars:
+            if char.name != 'pacman':
+                if pygame.sprite.collide_mask(self, char):
+                    self.kill()
+        # death = pygame.sprite.spritecollideany(self, self.groups()[0], collided = None)
+        # print(death)
+        # if death and death.name != 'pacman':
+        #     print (death)
 
         pressed = pygame.key.get_pressed()
         if pressed[pygame.K_w]:
@@ -151,9 +162,11 @@ class pacman(pygame.sprite.Sprite):
 
 characters = pygame.sprite.Group()
 board1 = board(width,height,screen)
-pacman1 = pacman(screen, board1)
+pacman1 = pacman(screen, board1, characters)
 redghost1 = redghost(board1, "orangeghost.png", characters)
 redghost2 = redghost(board1, "redghost.png", characters)
+redghost3 = redghost(board1, "pinkghost.png", characters)
+redghost4 = redghost(board1, "blueghost.png", characters)
 
 while True:
     
@@ -166,9 +179,8 @@ while True:
         #game code
     screen.fill((0,0,0))
     board1.draw()
+
     
-    pacman1.move()
-    pacman1.draw()
     characters.draw(screen)
     characters.update()
     pygame.display.update()
